@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Cepat Berhitung</title>
+        <meta name="viewport" content="width=device-width, maximum-scale=1, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+        <!-- shims for backwards compatibility -->
+        <script type="text/javascript" src="lib/js/functionPrototypeBind.js"></script>
+        <script type="text/javascript" src="lib/js/classList.js"></script>
+        <script type="text/javascript" src="lib/js/requestAnimationFrame.js"></script>
+
+        <!-- module loader -->
+        <script type="text/javascript" src="lib/js/require.js"></script>
+
+        <!-- famous -->
+        <link rel="stylesheet" type="text/css" href="lib/css/famous.css" />
+        <script type="text/javascript" src="lib/js/famous.min.js"></script>
+
+        <!-- app code -->
+        <link rel="stylesheet" type="text/css" href="css/app.css" />
+        <script type="text/javascript">
+            require.config({
+                baseUrl: './src/'
+            });
+            require(['main']);
+        </script>
+    </head>
+    <body></body>
+</html>
