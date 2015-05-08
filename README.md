@@ -1,0 +1,2 @@
+# patung
+Patung (Cepat Berhitung)
