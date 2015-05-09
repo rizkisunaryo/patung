@@ -7,7 +7,10 @@ define(function(require, exports, module) {
   var Easing = require('famous/transitions/Easing');
   var Transitionable = require('famous/transitions/Transitionable');
 
-  var initialRotationModifier;
+  var centerModifier;
+  var initialRotationXModifier;
+  var initialRotationYModifier;
+  var initialRotationZModifier;
   var initialResizeTransitionable = new Transitionable(0);
 
   function OpeningView() {
@@ -25,28 +28,47 @@ define(function(require, exports, module) {
   OpeningView.DEFAULT_OPTIONS = {};
 
   function _prepareInitialAnimations() {
-  	initialRotationModifier = new Modifier({
-		  origin: [0.5, 0.5],
-		  align : [0.5, 0.5],
-		});
+    centerModifier = new Modifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
+    });
 
-  	this.mainNode = this.add(initialRotationModifier);
+  	initialRotationXModifier = new Modifier({});
+    initialRotationYModifier = new Modifier({});
+    initialRotationZModifier = new Modifier({});
+
+  	this.mainNode = this.add(centerModifier).add(initialRotationXModifier).add(initialRotationYModifier).add(initialRotationZModifier);
   }
 
   function _initialAnimations() {
   	initialResizeTransitionable.set(1, {
-	    duration: 1000
+	    duration: 2500
 		});
 
-  	initialRotationModifier.transformFrom(rotate);
+  	initialRotationXModifier.transformFrom(rotateX);
+    initialRotationYModifier.transformFrom(rotateY);
+    initialRotationZModifier.transformFrom(rotateZ);
 
-		var angle = 0;
-		var angleAdd = Math.PI/10;
-		var limit = Math.PI*6;
-		function rotate() {
-		    angle += angleAdd;
-		    if (angle<=limit)
-		    	return Transform.rotateZ(angle);
+    var angleX = 0;
+    var angleY = 0;
+		var angleZ = 0;
+		var angleAdd = Math.PI/40;
+		var limit = Math.PI*4;
+
+    function rotateX() {
+        angleX += angleAdd;
+        if (angleX<=limit)
+          return Transform.rotateX(angleX);
+    }
+    function rotateY() {
+        angleY += angleAdd;
+        if (angleY<=limit)
+          return Transform.rotateY(angleY);
+    }
+		function rotateZ() {
+		    angleZ += angleAdd;
+		    if (angleZ<=limit)
+		    	return Transform.rotateZ(angleZ);
 		}
   }
 
@@ -60,9 +82,8 @@ define(function(require, exports, module) {
 
     var backgroundModifier = new Modifier({
 	    size: [window.innerWidth, window.innerHeight],
+      transform: Transform.behind,
 	    transform: function() {
-        // cache the value of transitionable.get()
-        // to optimize for performance
         var scale = initialResizeTransitionable.get();
         return Transform.scale(scale, scale, 1);
 	    }
@@ -77,22 +98,30 @@ define(function(require, exports, module) {
       pointerEvents : 'none',
       properties : {
       	zIndex: 2,
-      	lineHeight: '200px',
-      	textAlign: 'center'
+      	textAlign: 'center',
+        fontSize: '1.5em',
+        fontFamily: 'Arial',
+        fontWeight: 'bold'
       }
     });
 
     var iconModifier = new Modifier({
 	    size : [200,200],
 	    transform: function() {
-        // cache the value of transitionable.get()
-        // to optimize for performance
         var scale = initialResizeTransitionable.get();
-        return Transform.scale(scale, scale, 1);
+        return Transform.scale(scale, scale);
 	    }
 		});
 
-    this.mainNode.add(iconModifier).add(iconSurface);
+    var translator = new Modifier({
+      transform: function() {
+        return Transform.translate(0,0,27);
+      }
+    });
+
+    this.mainNode.add(iconModifier)
+    .add(translator)
+    .add(iconSurface);
   }
 
   module.exports = OpeningView;
