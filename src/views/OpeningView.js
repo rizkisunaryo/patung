@@ -1,11 +1,13 @@
 define(function(require, exports, module) {
   var View          = require('famous/core/View');
   var Surface       = require('famous/core/Surface');
+  var ImageSurface  = require('famous/surfaces/ImageSurface');
   var Transform     = require('famous/core/Transform');
   var Modifier = require('famous/core/Modifier');
   var StateModifier = require('famous/modifiers/StateModifier');
   var Easing = require('famous/transitions/Easing');
   var Transitionable = require('famous/transitions/Transitionable');
+  var Timer         = require('famous/utilities/Timer');
 
   var centerModifier;
   var initialRotationXModifier;
@@ -13,13 +15,31 @@ define(function(require, exports, module) {
   var initialRotationZModifier;
   var initialResizeTransitionable = new Transitionable(0);
 
+  var WINDOW_WIDTH = window.innerWidth;
+  var WINDOW_HEIGHT = window.innerHeight;
+  var rotationAnimationTime = 2000;
+  var poweredByStartDelay = rotationAnimationTime+500;
+  var poweredByDuration = 3000;
+  var iconDuration = 1000;
+  var leftIconDelay = poweredByStartDelay + poweredByDuration - 2000;
+  var rightIconDelay = leftIconDelay + iconDuration + 500;
+  var bottomIconDelay = rightIconDelay + iconDuration + 500;
+  var openingDoneDelay = bottomIconDelay + iconDuration + 500;
+
   function OpeningView() {
     View.apply(this, arguments);
 
     _prepareInitialAnimations.call(this);
     _createBackground.call(this);
-    _createOpeningText.call(this);
+    _createTitleText.call(this);
     _initialAnimations.call(this);
+
+    _createPoweredByText.call(this);
+    _createLeftIcon.call(this);
+    _createRightIcon.call(this);
+    _createBottomIcon.call(this);
+
+    _setListeners.call(this);
   }
 
   OpeningView.prototype = Object.create(View.prototype);
@@ -42,7 +62,7 @@ define(function(require, exports, module) {
 
   function _initialAnimations() {
   	initialResizeTransitionable.set(1, {
-	    duration: 2500
+	    duration: rotationAnimationTime
 		});
 
   	initialRotationXModifier.transformFrom(rotateX);
@@ -52,7 +72,7 @@ define(function(require, exports, module) {
     var angleX = 0;
     var angleY = 0;
 		var angleZ = 0;
-		var angleAdd = Math.PI/40;
+		var angleAdd = Math.PI/30;
 		var limit = Math.PI*4;
 
     function rotateX() {
@@ -81,7 +101,7 @@ define(function(require, exports, module) {
     });
 
     var backgroundModifier = new Modifier({
-	    size: [window.innerWidth, window.innerHeight],
+	    size: [WINDOW_WIDTH, WINDOW_HEIGHT],
       transform: Transform.behind,
 	    transform: function() {
         var scale = initialResizeTransitionable.get();
@@ -92,8 +112,8 @@ define(function(require, exports, module) {
     this.mainNode.add(backgroundModifier).add(backgroundSurface);
   }
 
-  function _createOpeningText() {
-    var iconSurface = new Surface({
+  function _createTitleText() {
+    var textSurface = new Surface({
       content : 'Cepat Berhitung',
       pointerEvents : 'none',
       properties : {
@@ -101,11 +121,11 @@ define(function(require, exports, module) {
       	textAlign: 'center',
         fontSize: '1.5em',
         fontFamily: 'Arial',
-        fontWeight: 'bold'
+        // fontWeight: 'bold'
       }
     });
 
-    var iconModifier = new Modifier({
+    var textModifier = new Modifier({
 	    size : [200,200],
 	    transform: function() {
         var scale = initialResizeTransitionable.get();
@@ -113,15 +133,132 @@ define(function(require, exports, module) {
 	    }
 		});
 
-    var translator = new Modifier({
+    var textTranslator = new Modifier({
       transform: function() {
-        return Transform.translate(0,0,27);
+        return Transform.translate(0,0,1);
       }
     });
 
-    this.mainNode.add(iconModifier)
-    .add(translator)
+    this.mainNode.add(textModifier)
+    .add(textTranslator)
+    .add(textSurface);
+  }
+
+  function _createPoweredByText() {
+    var textSurface = new Surface({
+      content : 'Powered by:',
+      pointerEvents : 'none',
+      properties : {
+        zIndex: 2,
+        textAlign: 'center',
+        // fontSize: '1.5em',
+        fontFamily: 'Arial',
+        fontWeight: 'bold',
+      }
+    });
+
+    var transitionable = new Transitionable(0);
+
+    var textModifier = new Modifier({
+      size : [130,130],
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
+      opacity: function() {
+        return transitionable.get();
+      }
+    });
+
+    this.add(textModifier)
+    .add(textSurface);
+
+    Timer.setTimeout(function(poweredByDuration) {
+      transitionable.set(1, {
+        duration: poweredByDuration, curve: Easing.outBack
+      });
+    }.bind(this,poweredByDuration), poweredByStartDelay);
+  }
+
+  function _createLeftIcon() {
+    var iconSurface = new ImageSurface({
+      size: [100, 100],
+      content : 'img/requirejs.png',
+      properties : {
+        top: '10px',
+        left: ((-WINDOW_WIDTH/2.0)-60)+'px'
+      }
+    });
+
+    var iconModifier = new StateModifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5]
+    });
+
+    this.add(iconModifier).add(iconSurface);
+
+    Timer.setTimeout(function(iconDuration) {
+      iconModifier.setTransform(
+        Transform.translate(WINDOW_WIDTH/2.0+20, 0, 0),
+        { duration : iconDuration, curve: Easing.outBounce }
+      );
+    }.bind(this, iconDuration), leftIconDelay);
+  }
+
+  function _createRightIcon() {
+    var iconSurface = new ImageSurface({
+      size: [75, 100],
+      content : 'img/famous.png',
+      properties : {
+        top: '10px',
+        left: ((WINDOW_WIDTH/2.0)+60)+'px'
+      }
+    });
+
+    var iconModifier = new StateModifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5]
+    });
+
+    this.add(iconModifier).add(iconSurface);
+
+    Timer.setTimeout(function(iconDuration) {
+      iconModifier.setTransform(
+        Transform.translate(-WINDOW_WIDTH/2.0, 0, 0),
+        { duration : iconDuration, curve: Easing.outBounce }
+      );
+    }.bind(this, iconDuration), rightIconDelay);
+  }
+
+  function _createBottomIcon() {
+    var iconSurface = new ImageSurface({
+      size: [250, 74],
+      content : 'img/cordova.png',
+      properties : {
+        left: '10px',
+        top: (WINDOW_HEIGHT/2.0+37)+'px',
+      }
+    });
+
+    var iconModifier = new StateModifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5]
+    });
+
+    this
+    .add(iconModifier)
     .add(iconSurface);
+
+    Timer.setTimeout(function(iconDuration) {
+      iconModifier.setTransform(
+        Transform.translate(0, -(WINDOW_HEIGHT/2.0-(105-37)), 0),
+        { duration : iconDuration, curve: Easing.outBounce }
+      );
+    }.bind(this, iconDuration), bottomIconDelay);
+  }
+
+  function _setListeners() {
+    Timer.setTimeout(function() {
+      this._eventOutput.emit('openingDone');
+    }.bind(this), openingDoneDelay);
   }
 
   module.exports = OpeningView;

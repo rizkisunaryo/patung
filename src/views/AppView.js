@@ -10,6 +10,8 @@ define(function(require, exports, module) {
     View.apply(this, arguments);
 
     _createOpeningView.call(this);
+
+    this.openingView.on('openingDone', function(){console.log('openingDone')}.bind(this));
   }
 
   AppView.prototype = Object.create(View.prototype);
@@ -18,14 +20,14 @@ define(function(require, exports, module) {
   AppView.DEFAULT_OPTIONS = {};
 
   function _createOpeningView() {
-        this.openingView = new OpeningView();
+    this.openingView = new OpeningView();
 
-        var menuModifier = new StateModifier({
-            transform: Transform.behind
-        });
+    var menuModifier = new StateModifier({
+      transform: Transform.behind
+    });
 
-        this.add(menuModifier).add(this.openingView);
-    }
+    this.add(menuModifier).add(this.openingView);
+  }
 
   module.exports = AppView;
 });
