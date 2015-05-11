@@ -98,7 +98,6 @@ define(function(require, exports, module) {
     var backgroundSurface = new Surface({
       properties: {
         backgroundColor: 'yellow',
-        boxShadow: '0 0 1px yellow'
       }
     });
 
@@ -107,7 +106,7 @@ define(function(require, exports, module) {
       transform: Transform.behind,
 	    transform: function() {
         var scale = initialResizeTransitionable.get();
-        return Transform.scale(scale, scale, 1);
+        return Transform.scale(scale, scale, scale);
 	    }
 		});
 
@@ -121,11 +120,9 @@ define(function(require, exports, module) {
       pointerEvents : 'none',
       properties : {
         top: (-WINDOW_HEIGHT/2.0)+'px',
-      	// zIndex: 2,
       	textAlign: 'center',
         fontSize: '1.5em',
         fontFamily: 'Arial',
-        // fontWeight: 'bold'
       }
     });
 
@@ -133,22 +130,10 @@ define(function(require, exports, module) {
 	    size : [200,200],
       origin: [0.5, 0.5],
       align : [0.5, 0.5],
-	    // transform: function() {
-     //    var scale = initialResizeTransitionable.get();
-     //    return Transform.scale(scale, scale);
-	    // }
 		});
 
-    // var textTranslator = new Modifier({
-    //   transform: function() {
-    //     return Transform.translate(0,0,1);
-    //   }
-    // });
-
     this
-    // .mainNode
     .add(textModifier)
-    // .add(textTranslator)
     .add(textSurface);
 
     Timer.setTimeout(function(translateAnimationDuration) {
@@ -166,7 +151,6 @@ define(function(require, exports, module) {
       properties : {
         zIndex: 2,
         textAlign: 'center',
-        // fontSize: '1.5em',
         fontFamily: 'Arial',
         fontWeight: 'bold',
       }
