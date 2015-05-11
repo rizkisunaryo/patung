@@ -5,13 +5,15 @@ define(function(require, exports, module) {
   var StateModifier = require('famous/modifiers/StateModifier');
 
   var OpeningView = require('views/OpeningView');
+  var StartView = require('views/StartView');
 
   function AppView() {
     View.apply(this, arguments);
 
     _createOpeningView.call(this);
 
-    this.openingView.on('openingDone', function(){console.log('openingDone')}.bind(this));
+    
+    this.openingView.on('openingDone', this.openingDone.bind(this));
   }
 
   AppView.prototype = Object.create(View.prototype);
@@ -28,6 +30,10 @@ define(function(require, exports, module) {
 
     this.add(menuModifier).add(this.openingView);
   }
+
+  AppView.prototype.openingDone = function() {
+    console.log('openingDone');
+  };
 
   module.exports = AppView;
 });

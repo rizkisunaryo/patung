@@ -2,6 +2,7 @@ define(function(require, exports, module) {
   var View          = require('famous/core/View');
   var Surface       = require('famous/core/Surface');
   var ImageSurface  = require('famous/surfaces/ImageSurface');
+  var ContainerSurface  = require('famous/surfaces/ContainerSurface');
   var Transform     = require('famous/core/Transform');
   var Modifier = require('famous/core/Modifier');
   var StateModifier = require('famous/modifiers/StateModifier');
@@ -17,14 +18,15 @@ define(function(require, exports, module) {
 
   var WINDOW_WIDTH = window.innerWidth;
   var WINDOW_HEIGHT = window.innerHeight;
+  var translateAnimationDuration = 1000;
   var rotationAnimationTime = 2000;
-  var poweredByStartDelay = rotationAnimationTime+500;
+  var patungTextDelay = rotationAnimationTime + 500;
+  var poweredByStartDelay = patungTextDelay + translateAnimationDuration + 500;
   var poweredByDuration = 3000;
-  var iconDuration = 1000;
   var leftIconDelay = poweredByStartDelay + poweredByDuration - 2000;
-  var rightIconDelay = leftIconDelay + iconDuration + 500;
-  var bottomIconDelay = rightIconDelay + iconDuration + 500;
-  var openingDoneDelay = bottomIconDelay + iconDuration + 500;
+  var rightIconDelay = leftIconDelay + translateAnimationDuration + 500;
+  var bottomIconDelay = rightIconDelay + translateAnimationDuration + 500;
+  var openingDoneDelay = bottomIconDelay + translateAnimationDuration + 500;
 
   function OpeningView() {
     View.apply(this, arguments);
@@ -73,7 +75,7 @@ define(function(require, exports, module) {
     var angleY = 0;
 		var angleZ = 0;
 		var angleAdd = Math.PI/30;
-		var limit = Math.PI*4;
+		var limit = Math.PI*2;
 
     function rotateX() {
         angleX += angleAdd;
@@ -114,10 +116,12 @@ define(function(require, exports, module) {
 
   function _createTitleText() {
     var textSurface = new Surface({
+      size : [200,200],
       content : 'Cepat Berhitung',
       pointerEvents : 'none',
       properties : {
-      	zIndex: 2,
+        top: (-WINDOW_HEIGHT/2.0)+'px',
+      	// zIndex: 2,
       	textAlign: 'center',
         fontSize: '1.5em',
         fontFamily: 'Arial',
@@ -127,21 +131,32 @@ define(function(require, exports, module) {
 
     var textModifier = new Modifier({
 	    size : [200,200],
-	    transform: function() {
-        var scale = initialResizeTransitionable.get();
-        return Transform.scale(scale, scale);
-	    }
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
+	    // transform: function() {
+     //    var scale = initialResizeTransitionable.get();
+     //    return Transform.scale(scale, scale);
+	    // }
 		});
 
-    var textTranslator = new Modifier({
-      transform: function() {
-        return Transform.translate(0,0,1);
-      }
-    });
+    // var textTranslator = new Modifier({
+    //   transform: function() {
+    //     return Transform.translate(0,0,1);
+    //   }
+    // });
 
-    this.mainNode.add(textModifier)
-    .add(textTranslator)
+    this
+    // .mainNode
+    .add(textModifier)
+    // .add(textTranslator)
     .add(textSurface);
+
+    Timer.setTimeout(function(translateAnimationDuration) {
+      textModifier.setTransform(
+        Transform.translate(0, WINDOW_HEIGHT/2.0, 0),
+        { duration : translateAnimationDuration, curve: Easing.outBounce }
+      );
+    }.bind(this, translateAnimationDuration), patungTextDelay);
   }
 
   function _createPoweredByText() {
@@ -195,12 +210,12 @@ define(function(require, exports, module) {
 
     this.add(iconModifier).add(iconSurface);
 
-    Timer.setTimeout(function(iconDuration) {
+    Timer.setTimeout(function(translateAnimationDuration) {
       iconModifier.setTransform(
         Transform.translate(WINDOW_WIDTH/2.0+20, 0, 0),
-        { duration : iconDuration, curve: Easing.outBounce }
+        { duration : translateAnimationDuration, curve: Easing.outBounce }
       );
-    }.bind(this, iconDuration), leftIconDelay);
+    }.bind(this, translateAnimationDuration), leftIconDelay);
   }
 
   function _createRightIcon() {
@@ -220,12 +235,12 @@ define(function(require, exports, module) {
 
     this.add(iconModifier).add(iconSurface);
 
-    Timer.setTimeout(function(iconDuration) {
+    Timer.setTimeout(function(translateAnimationDuration) {
       iconModifier.setTransform(
         Transform.translate(-WINDOW_WIDTH/2.0, 0, 0),
-        { duration : iconDuration, curve: Easing.outBounce }
+        { duration : translateAnimationDuration, curve: Easing.outBounce }
       );
-    }.bind(this, iconDuration), rightIconDelay);
+    }.bind(this, translateAnimationDuration), rightIconDelay);
   }
 
   function _createBottomIcon() {
@@ -247,12 +262,12 @@ define(function(require, exports, module) {
     .add(iconModifier)
     .add(iconSurface);
 
-    Timer.setTimeout(function(iconDuration) {
+    Timer.setTimeout(function(translateAnimationDuration) {
       iconModifier.setTransform(
         Transform.translate(0, -(WINDOW_HEIGHT/2.0-(105-37)), 0),
-        { duration : iconDuration, curve: Easing.outBounce }
+        { duration : translateAnimationDuration, curve: Easing.outBounce }
       );
-    }.bind(this, iconDuration), bottomIconDelay);
+    }.bind(this, translateAnimationDuration), bottomIconDelay);
   }
 
   function _setListeners() {
