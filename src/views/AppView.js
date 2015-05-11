@@ -102,6 +102,8 @@ define(function(require, exports, module) {
     startOpacity.set(0.0, {
       duration: 500
     });
+
+    this.gameView._eventOutput.emit('startGame');
   };
 
   module.exports = AppView;

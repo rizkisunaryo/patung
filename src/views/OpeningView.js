@@ -121,7 +121,7 @@ define(function(require, exports, module) {
       properties : {
         top: (-WINDOW_HEIGHT/2.0)+'px',
       	textAlign: 'center',
-        fontSize: '1.5em',
+        fontSize: '21px',
         fontFamily: 'Arial',
       }
     });
