@@ -6,6 +6,7 @@ define(function(require, exports, module) {
   var Transitionable = require('famous/transitions/Transitionable');
   var Easing = require('famous/transitions/Easing');
   var Modifier = require('famous/core/Modifier');
+  var Timer         = require('famous/utilities/Timer');
 
   var OpeningView = require('views/OpeningView');
   var StartView = require('views/StartView');
@@ -13,6 +14,7 @@ define(function(require, exports, module) {
 
   var WINDOW_WIDTH = window.innerWidth;
   var WINDOW_HEIGHT = window.innerHeight;
+  var startToGameTransitionTime = 500;
 
   var startTransitionable = new Transitionable(1.0);
   var startOpacity = new Transitionable(1.0);
@@ -100,10 +102,12 @@ define(function(require, exports, module) {
       Transform.translate(0, 0, 0)
     );
     startOpacity.set(0.0, {
-      duration: 500
+      duration: startToGameTransitionTime
     });
 
-    this.gameView._eventOutput.emit('startGame');
+    Timer.setTimeout(function() {
+      this.gameView._eventOutput.emit('startGame');
+    }.bind(this), startToGameTransitionTime);
   };
 
   module.exports = AppView;

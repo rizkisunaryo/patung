@@ -6,14 +6,24 @@ define(function(require, exports, module) {
   var Modifier = require('famous/core/Modifier');
   var ContainerSurface  = require('famous/surfaces/ContainerSurface');
   var Transitionable = require('famous/transitions/Transitionable');
+  var Easing = require('famous/transitions/Easing');
+  var Timer         = require('famous/utilities/Timer');
+  var FastClick       = require('famous/inputs/FastClick');
 
   var WINDOW_WIDTH = window.innerWidth;
   var WINDOW_HEIGHT = window.innerHeight;
   var bubbleSize = 50;
+  var translateAnimationDuration = 500;
+  var timerTime = 2000;
 
   var centerModifier;
+  var number1Modifier;
+  var operatorModifier;
+  var number2Modifier;
+  var resultModifier;
 
-  var timerTransitionable = new Transitionable(1.0);
+  var timerTransitionable = new Transitionable(0.0);
+  var operatorTransitionable = new Transitionable(0.0);
 
   function GameView() {
     View.apply(this, arguments);
@@ -30,6 +40,11 @@ define(function(require, exports, module) {
     _createResult.call(this);
 
     _createTimer.call(this);
+    _createScoreText.call(this);
+    _createTrueBtn.call(this);
+    _createFalseBtn.call(this);
+
+    _setListeners.call(this);
   }
 
   GameView.prototype = Object.create(View.prototype);
@@ -116,7 +131,8 @@ define(function(require, exports, module) {
       size: [bubbleSize,bubbleSize],
       properties: {
         fontFamily: 'Arial',
-        left: '-75px',
+        // left: '-75px',
+        left: (-WINDOW_WIDTH/2-80)+'px',
         textAlign: 'center',
         backgroundColor: 'white',
         lineHeight: bubbleSize+'px',
@@ -124,7 +140,9 @@ define(function(require, exports, module) {
       }
   	});
 
-  	this.mainNode.add(surface);
+    number1Modifier = new Modifier();
+
+  	this.mainNode.add(number1Modifier).add(surface);
   }
 
   function _createOperator() {
@@ -134,14 +152,23 @@ define(function(require, exports, module) {
       properties: {
         color: 'white',
         fontFamily: 'Arial',
-        left: '-35px',
+        left: '-40px',
         textAlign: 'center',
         fontSize: '35px',
         lineHeight: '35px',
       }
     });
 
-    this.mainNode.add(surface);
+    operatorModifier = new Modifier({
+      transform: function() {
+        return Transform.rotateZ(Math.PI*operatorTransitionable.get());
+      },
+      opacity: function() {
+        return operatorTransitionable.get();
+      }
+    });
+
+    this.mainNode.add(operatorModifier).add(surface);
   }
 
   function _createNumber2() {
@@ -150,7 +177,8 @@ define(function(require, exports, module) {
       size: [bubbleSize,bubbleSize],
       properties: {
         fontFamily: 'Arial',
-        left: '5px',
+        top: (-WINDOW_HEIGHT/2-bubbleSize)+'px',
+        left: '0px',
         textAlign: 'center',
         backgroundColor: 'white',
         lineHeight: bubbleSize+'px',
@@ -158,7 +186,9 @@ define(function(require, exports, module) {
       }
     });
 
-    this.mainNode.add(surface);
+    number2Modifier = new Modifier();
+
+    this.mainNode.add(number2Modifier).add(surface);
   }
 
   function _createEqualSign() {
@@ -168,7 +198,7 @@ define(function(require, exports, module) {
       properties: {
         color: 'white',
         fontFamily: 'Arial',
-        left: '45px',
+        left: '40px',
         textAlign: 'center',
         fontSize: '35px',
         lineHeight: '35px',
@@ -184,7 +214,8 @@ define(function(require, exports, module) {
       size: [bubbleSize,bubbleSize],
       properties: {
         fontFamily: 'Arial',
-        left: '85px',
+        // left: '80px',
+        left: (WINDOW_WIDTH/2+80)+'px',
         textAlign: 'center',
         backgroundColor: 'white',
         lineHeight: bubbleSize+'px',
@@ -193,7 +224,9 @@ define(function(require, exports, module) {
       }
     });
 
-    this.mainNode.add(surface);
+    resultModifier = new Modifier();
+
+    this.mainNode.add(resultModifier).add(surface);
   }
 
   function _createTimer() {
@@ -216,12 +249,108 @@ define(function(require, exports, module) {
     });
 
     this.add(modifier).add(surface);
+  }
 
-    this.on('startGame', function() {
-      timerTransitionable.set(0.0, {
-        duration: 2000
-      });
+  function _createScoreText() {
+    var surface = new Surface({
+      size: [undefined, true],
+      content: 'score: '+score,
+      properties: {
+        fontFamily: 'Arial',
+        fontSize: 'bold',
+        paddingLeft: '5px',
+        backgroundColor: 'white',
+      }
     });
+
+    var modifier = new Modifier({
+      origin: [0, 0],
+      align : [0, 0],
+    });
+
+    this.add(modifier).add(surface);
+  }
+
+  function _createFalseBtn() {
+    var surface = new Surface({
+      content: '✖',
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        fontFamily: 'Arial',
+        top: '80px',
+        left: '-80px',
+        textAlign: 'center',
+        backgroundColor: 'white',
+        lineHeight: bubbleSize+'px',
+        borderRadius: bubbleSize+'px',
+        fontWeight: 'bold',
+        fontSize: '1.5em',
+      }
+    });
+
+    var modifier = new Modifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
+    });
+
+    this.add(modifier).add(surface);
+  }
+
+  function _createTrueBtn() {
+    var surface = new Surface({
+      content: '✔',
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        fontFamily: 'Arial',
+        top: '80px',
+        left: '80px',
+        textAlign: 'center',
+        backgroundColor: 'white',
+        lineHeight: bubbleSize+'px',
+        borderRadius: bubbleSize+'px',
+        fontWeight: 'bold',
+        fontSize: '1.5em',
+      }
+    });
+
+    var modifier = new Modifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
+    });
+
+    this.add(modifier).add(surface);
+  }
+
+  function _setListeners() {
+    this.on('startGame', _newQuestion);
+  }
+
+  function _newQuestion() {
+    number1Modifier.setTransform(
+      Transform.translate(WINDOW_WIDTH/2.0, 0, 0),
+      { duration : translateAnimationDuration, curve: Easing.outBounce }
+    );
+
+    operatorTransitionable.set(1.0, {
+      duration: translateAnimationDuration
+    });
+
+    number2Modifier.setTransform(
+      Transform.translate(0, WINDOW_HEIGHT/2+bubbleSize, 0),
+      { duration : translateAnimationDuration, curve: Easing.outBounce }
+    );
+
+    resultModifier.setTransform(
+      Transform.translate(-WINDOW_WIDTH/2.0, 0, 0),
+      { duration : translateAnimationDuration, curve: Easing.outBounce }
+    );
+
+    Timer.setTimeout(function(timerTime) {
+      timerTransitionable.set(1.0);
+      timerTransitionable.set(0.0, {
+        duration: timerTime
+      });
+    }.bind(this, timerTime), translateAnimationDuration);
   }
 
   module.exports = GameView;
