@@ -14,23 +14,43 @@ define(function(require, exports, module) {
   var WINDOW_HEIGHT = window.innerHeight;
   var bubbleSize = 50;
   var translateAnimationDuration = 500;
-  var timerTime = 2000;
+  var timerTime = 3000;
+  var isClickable = false;
+
+  var number1Txt;
+  var operatorTxt;
+  var number2Txt;
+  var resultTxt;
+  var trueTxt;
+  var trueBasicColor;
+  var trueCorrectColor;
+  var trueWrongColor;
+  var falseTxt;
+  var falseBasicColor;
+  var falseCorrectColor;
+  var falseWrongColor;
 
   var centerModifier;
   var number1Modifier;
   var operatorModifier;
   var number2Modifier;
   var resultModifier;
+  var trueCorrectModifier;
+  var trueWrongModifier;
+  var falseCorrectModifier;
+  var falseWrongModifier;
 
   var timerTransitionable = new Transitionable(0.0);
   var operatorTransitionable = new Transitionable(0.0);
+  var trueCorrectTransitionable = new Transitionable(0.0);
+  var trueWrongTransitionable = new Transitionable(0.0);
+  var falseCorrectTransitionable = new Transitionable(0.0);
+  var falseWrongTransitionable = new Transitionable(0.0);
 
   function GameView() {
     View.apply(this, arguments);
 
     _createCenterModifier.call(this);
-
-    _createLogic.call(this);
 
     _createBackground.call(this);
     _createNumber1.call(this);
@@ -41,6 +61,7 @@ define(function(require, exports, module) {
 
     _createTimer.call(this);
     _createScoreText.call(this);
+    _createLivesText.call(this);
     _createTrueBtn.call(this);
     _createFalseBtn.call(this);
 
@@ -60,6 +81,7 @@ define(function(require, exports, module) {
     this.mainNode = this.add(centerModifier);
   }
 
+  var lives = 10;
   var score = 0;
   var isCorrect = 0;
   var number1 = 11;
@@ -90,8 +112,7 @@ define(function(require, exports, module) {
       result = pNumber1 * pNumber2;
     }
     else {
-      result = pNumber1 / pNumber2 * 1.0;
-      result = result==Math.floor(result)? result.toFixed(0) : result.toFixed(2);
+      result = pNumber1 / pNumber2;
     }
 
     if (isCorrect==0) result+=10;
@@ -126,7 +147,7 @@ define(function(require, exports, module) {
   }
 
   function _createNumber1() {
-  	var surface = new Surface({
+  	number1Txt = new Surface({
   		content: number1+'',
       size: [bubbleSize,bubbleSize],
       properties: {
@@ -142,11 +163,11 @@ define(function(require, exports, module) {
 
     number1Modifier = new Modifier();
 
-  	this.mainNode.add(number1Modifier).add(surface);
+  	this.mainNode.add(number1Modifier).add(number1Txt);
   }
 
   function _createOperator() {
-    var surface = new Surface({
+    operatorTxt = new Surface({
       content: operatorString,
       size: [35,35],
       properties: {
@@ -168,16 +189,16 @@ define(function(require, exports, module) {
       }
     });
 
-    this.mainNode.add(operatorModifier).add(surface);
+    this.mainNode.add(operatorModifier).add(operatorTxt);
   }
 
   function _createNumber2() {
-    var surface = new Surface({
+    number2Txt = new Surface({
       content: number2+'',
       size: [bubbleSize,bubbleSize],
       properties: {
         fontFamily: 'Arial',
-        top: (-WINDOW_HEIGHT/2-bubbleSize)+'px',
+        top: (WINDOW_HEIGHT/2+bubbleSize)+'px',
         left: '0px',
         textAlign: 'center',
         backgroundColor: 'white',
@@ -188,7 +209,7 @@ define(function(require, exports, module) {
 
     number2Modifier = new Modifier();
 
-    this.mainNode.add(number2Modifier).add(surface);
+    this.mainNode.add(number2Modifier).add(number2Txt);
   }
 
   function _createEqualSign() {
@@ -209,7 +230,7 @@ define(function(require, exports, module) {
   }
 
   function _createResult() {
-    var surface = new Surface({
+    resultTxt = new Surface({
       content: result+'',
       size: [bubbleSize,bubbleSize],
       properties: {
@@ -226,7 +247,7 @@ define(function(require, exports, module) {
 
     resultModifier = new Modifier();
 
-    this.mainNode.add(resultModifier).add(surface);
+    this.mainNode.add(resultModifier).add(resultTxt);
   }
 
   function _createTimer() {
@@ -254,25 +275,43 @@ define(function(require, exports, module) {
   function _createScoreText() {
     var surface = new Surface({
       size: [undefined, true],
-      content: 'score: '+score,
+      content: ''+score,
       properties: {
         fontFamily: 'Arial',
         fontSize: 'bold',
         paddingLeft: '5px',
-        backgroundColor: 'white',
+        // backgroundColor: 'white',
+        fontSize: '42px',
+        textAlign: 'center',
+        top: '-120px',
+        color: 'white',
       }
     });
 
     var modifier = new Modifier({
-      origin: [0, 0],
-      align : [0, 0],
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
     });
 
     this.add(modifier).add(surface);
   }
 
-  function _createFalseBtn() {
+  function _createLivesText() {
     var surface = new Surface({
+      content: 'Lives: '+lives,
+      size: [undefined, true],
+      properties: {
+        padding: '5px',
+        color: 'white',
+        fontWeight: 'bold',
+      }
+    });
+
+    this.add(surface);
+  }
+
+  function _createFalseBtn() {
+    falseTxt = new Surface({
       content: '✖',
       size: [bubbleSize,bubbleSize],
       properties: {
@@ -280,11 +319,40 @@ define(function(require, exports, module) {
         top: '80px',
         left: '-80px',
         textAlign: 'center',
-        backgroundColor: 'white',
         lineHeight: bubbleSize+'px',
-        borderRadius: bubbleSize+'px',
         fontWeight: 'bold',
-        fontSize: '1.5em',
+        fontSize: '21px',
+        cursor: 'pointer',
+      }
+    });
+
+    falseBasicColor = new Surface({
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        top: '80px',
+        left: '-80px',
+        backgroundColor: 'white',
+        borderRadius: bubbleSize+'px',
+      }
+    });
+
+    falseCorrectColor = new Surface({
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        top: '80px',
+        left: '-80px',
+        backgroundColor: 'green',
+        borderRadius: bubbleSize+'px',
+      }
+    });
+
+    falseWrongColor = new Surface({
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        top: '80px',
+        left: '-80px',
+        backgroundColor: 'red',
+        borderRadius: bubbleSize+'px',
       }
     });
 
@@ -293,11 +361,40 @@ define(function(require, exports, module) {
       align : [0.5, 0.5],
     });
 
-    this.add(modifier).add(surface);
+    var textModifier = new Modifier({
+      transform: function() {
+        return Transform.translate(0, 0, 3);
+      }
+    });
+
+    var correctWrongModifier = new Modifier({
+      transform: function() {
+        return Transform.translate(0, 0, 2);
+      }
+    });
+
+    falseCorrectModifier = new Modifier({
+      opacity: function() {
+        return falseCorrectTransitionable.get();
+      }
+    });
+
+    falseWrongModifier = new Modifier({
+      opacity: function() {
+        return falseWrongTransitionable.get();
+      }
+    });
+
+    var theNode = this.add(modifier);
+    theNode.add(falseBasicColor);
+    var correctWrongNode = theNode.add(correctWrongModifier);
+    correctWrongNode.add(falseCorrectModifier).add(falseCorrectColor);
+    correctWrongNode.add(falseWrongModifier).add(falseWrongColor);
+    theNode.add(textModifier).add(falseTxt);
   }
 
   function _createTrueBtn() {
-    var surface = new Surface({
+    trueTxt = new Surface({
       content: '✔',
       size: [bubbleSize,bubbleSize],
       properties: {
@@ -305,11 +402,40 @@ define(function(require, exports, module) {
         top: '80px',
         left: '80px',
         textAlign: 'center',
-        backgroundColor: 'white',
         lineHeight: bubbleSize+'px',
-        borderRadius: bubbleSize+'px',
         fontWeight: 'bold',
-        fontSize: '1.5em',
+        fontSize: '21px',
+        cursor: 'pointer',
+      }
+    });
+
+    trueBasicColor = new Surface({
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        top: '80px',
+        left: '80px',
+        backgroundColor: 'white',
+        borderRadius: bubbleSize+'px',
+      }
+    });
+
+    trueCorrectColor = new Surface({
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        top: '80px',
+        left: '80px',
+        backgroundColor: 'green',
+        borderRadius: bubbleSize+'px',
+      }
+    });
+
+    trueWrongColor = new Surface({
+      size: [bubbleSize,bubbleSize],
+      properties: {
+        top: '80px',
+        left: '80px',
+        backgroundColor: 'red',
+        borderRadius: bubbleSize+'px',
       }
     });
 
@@ -318,14 +444,76 @@ define(function(require, exports, module) {
       align : [0.5, 0.5],
     });
 
-    this.add(modifier).add(surface);
+    var textModifier = new Modifier({
+      transform: function() {
+        return Transform.translate(0, 0, 3);
+      }
+    });
+
+    var correctWrongModifier = new Modifier({
+      transform: function() {
+        return Transform.translate(0, 0, 2);
+      }
+    });
+
+    trueCorrectModifier = new Modifier({
+      opacity: function() {
+        return trueCorrectTransitionable.get();
+      }
+    });
+
+    trueWrongModifier = new Modifier({
+      opacity: function() {
+        return trueWrongTransitionable.get();
+      }
+    });
+
+    var theNode = this.add(modifier);
+    theNode.add(trueBasicColor);
+    var correctWrongNode = theNode.add(correctWrongModifier);
+    correctWrongNode.add(trueCorrectModifier).add(trueCorrectColor);
+    correctWrongNode.add(trueWrongModifier).add(trueWrongColor);
+    theNode.add(textModifier).add(trueTxt);
   }
 
   function _setListeners() {
     this.on('startGame', _newQuestion);
+
+    falseTxt.on('click', function() {
+      if (isClickable) {
+        if (isCorrect==0) {
+          falseCorrectTransitionable.set(1.0);
+          score++;
+        }
+        else {
+          falseWrongTransitionable.set(1.0);
+        }
+        _dismissQuestion();
+      }
+    });
+
+    trueTxt.on('click', function() {
+      if (isClickable) {
+        if (isCorrect==1) {
+          trueCorrectTransitionable.set(1.0);
+          score++;
+        }
+        else {
+          trueWrongTransitionable.set(1.0);
+        }
+        _dismissQuestion();
+      }
+    });
   }
 
   function _newQuestion() {
+    _createLogic();
+
+    number1Txt.setContent(''+number1);
+    operatorTxt.setContent(operatorString);
+    number2Txt.setContent(''+number2);
+    resultTxt.setContent(''+(+result.toFixed(2)));
+
     number1Modifier.setTransform(
       Transform.translate(WINDOW_WIDTH/2.0, 0, 0),
       { duration : translateAnimationDuration, curve: Easing.outBounce }
@@ -336,7 +524,7 @@ define(function(require, exports, module) {
     });
 
     number2Modifier.setTransform(
-      Transform.translate(0, WINDOW_HEIGHT/2+bubbleSize, 0),
+      Transform.translate(0, -WINDOW_HEIGHT/2-bubbleSize, 0),
       { duration : translateAnimationDuration, curve: Easing.outBounce }
     );
 
@@ -345,12 +533,67 @@ define(function(require, exports, module) {
       { duration : translateAnimationDuration, curve: Easing.outBounce }
     );
 
+    trueCorrectTransitionable.set(0.0, {
+      duration: translateAnimationDuration
+    });
+    trueWrongTransitionable.set(0.0, {
+      duration: translateAnimationDuration
+    });
+    falseCorrectTransitionable.set(0.0, {
+      duration: translateAnimationDuration
+    });
+    falseWrongTransitionable.set(0.0, {
+      duration: translateAnimationDuration
+    });
+
+
     Timer.setTimeout(function(timerTime) {
+      isClickable=true;
       timerTransitionable.set(1.0);
       timerTransitionable.set(0.0, {
         duration: timerTime
       });
     }.bind(this, timerTime), translateAnimationDuration);
+  }
+
+  function _dismissQuestion() {
+    isClickable = false;
+
+    number1Modifier.halt();
+    operatorTransitionable.halt();
+    number2Modifier.halt();
+    resultModifier.halt();
+
+    trueCorrectTransitionable.halt();
+    trueWrongTransitionable.halt();
+    falseCorrectTransitionable.halt();
+    falseWrongTransitionable.halt();
+
+    timerTransitionable.halt();
+    timerTransitionable.set(0.0);
+
+    number1Modifier.setTransform(
+      Transform.translate(-WINDOW_WIDTH/2.0, 0, 0),
+      { duration : translateAnimationDuration, curve: Easing.outBounce }
+    );
+
+    operatorTransitionable.set(0.0, {
+      duration: translateAnimationDuration
+    });
+
+    number2Modifier.setTransform(
+      Transform.translate(0, WINDOW_HEIGHT/2+bubbleSize, 0),
+      { duration : translateAnimationDuration, curve: Easing.outBounce }
+    );
+
+    resultModifier.setTransform(
+      Transform.translate(WINDOW_WIDTH/2.0, 0, 0),
+      { duration : translateAnimationDuration, curve: Easing.outBounce }
+    );
+
+    Timer.setTimeout(function() {
+      _newQuestion();
+    }.bind(this), translateAnimationDuration);
   }
 
   module.exports = GameView;
