@@ -21,6 +21,8 @@ define(function(require, exports, module) {
   var operatorTxt;
   var number2Txt;
   var resultTxt;
+  var scoreTxt;
+  var livesTxt;
   var trueTxt;
   var trueBasicColor;
   var trueCorrectColor;
@@ -273,7 +275,7 @@ define(function(require, exports, module) {
   }
 
   function _createScoreText() {
-    var surface = new Surface({
+    scoreTxt = new Surface({
       size: [undefined, true],
       content: ''+score,
       properties: {
@@ -293,11 +295,11 @@ define(function(require, exports, module) {
       align : [0.5, 0.5],
     });
 
-    this.add(modifier).add(surface);
+    this.add(modifier).add(scoreTxt);
   }
 
   function _createLivesText() {
-    var surface = new Surface({
+    livesTxt = new Surface({
       content: 'Lives: '+lives,
       size: [undefined, true],
       properties: {
@@ -307,7 +309,7 @@ define(function(require, exports, module) {
       }
     });
 
-    this.add(surface);
+    this.add(livesTxt);
   }
 
   function _createFalseBtn() {
@@ -487,6 +489,7 @@ define(function(require, exports, module) {
         }
         else {
           falseWrongTransitionable.set(1.0);
+          lives--;
         }
         _dismissQuestion();
       }
@@ -500,6 +503,7 @@ define(function(require, exports, module) {
         }
         else {
           trueWrongTransitionable.set(1.0);
+          lives--;
         }
         _dismissQuestion();
       }
@@ -513,6 +517,7 @@ define(function(require, exports, module) {
     operatorTxt.setContent(operatorString);
     number2Txt.setContent(''+number2);
     resultTxt.setContent(''+(+result.toFixed(2)));
+
 
     number1Modifier.setTransform(
       Transform.translate(WINDOW_WIDTH/2.0, 0, 0),
@@ -552,12 +557,17 @@ define(function(require, exports, module) {
       timerTransitionable.set(1.0);
       timerTransitionable.set(0.0, {
         duration: timerTime
+      },function(){
+        lives--;
+        _dismissQuestion();
       });
     }.bind(this, timerTime), translateAnimationDuration);
   }
 
   function _dismissQuestion() {
     isClickable = false;
+    scoreTxt.setContent(''+score);
+    livesTxt.setContent('Lives: '+lives);
 
     number1Modifier.halt();
     operatorTransitionable.halt();
@@ -592,7 +602,9 @@ define(function(require, exports, module) {
     );
 
     Timer.setTimeout(function() {
-      _newQuestion();
+      if (lives>0) {
+        _newQuestion();
+      };
     }.bind(this), translateAnimationDuration);
   }
 
