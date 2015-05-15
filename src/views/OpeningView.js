@@ -19,7 +19,7 @@ define(function(require, exports, module) {
   var WINDOW_WIDTH = window.innerWidth;
   var WINDOW_HEIGHT = window.innerHeight;
   var translateAnimationDuration = 500;
-  var rotationAnimationTime = 500;
+  var rotationAnimationTime = 2000;
   var patungTextDelay = rotationAnimationTime + 500;
   var poweredByStartDelay = patungTextDelay + translateAnimationDuration + 500;
   var poweredByDuration = 3000;

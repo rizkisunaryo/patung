@@ -14,14 +14,18 @@ define(function(require, exports, module) {
   var WINDOW_HEIGHT = window.innerHeight;
   var bubbleSize = 50;
   var translateAnimationDuration = 500;
-  var timerTime = 3000;
+  var timerTime = 5000;
   var isClickable = false;
+  var endingAnimationDuration = 1000;
 
   var number1Txt;
   var operatorTxt;
   var number2Txt;
   var resultTxt;
+  var scoreLbl;
   var scoreTxt;
+  var highestLbl;
+  var highestTxt;
   var livesTxt;
   var trueTxt;
   var trueBasicColor;
@@ -31,6 +35,8 @@ define(function(require, exports, module) {
   var falseBasicColor;
   var falseCorrectColor;
   var falseWrongColor;
+  var replayBtn;
+  var highScoresBtn;
 
   var centerModifier;
   var number1Modifier;
@@ -41,6 +47,7 @@ define(function(require, exports, module) {
   var trueWrongModifier;
   var falseCorrectModifier;
   var falseWrongModifier;
+  var scoreTranslateModifier;
 
   var timerTransitionable = new Transitionable(0.0);
   var operatorTransitionable = new Transitionable(0.0);
@@ -48,6 +55,7 @@ define(function(require, exports, module) {
   var trueWrongTransitionable = new Transitionable(0.0);
   var falseCorrectTransitionable = new Transitionable(0.0);
   var falseWrongTransitionable = new Transitionable(0.0);
+  var endingTransitionable = new Transitionable(0.0);
 
   function GameView() {
     View.apply(this, arguments);
@@ -62,10 +70,15 @@ define(function(require, exports, module) {
     _createResult.call(this);
 
     _createTimer.call(this);
+    _createScoreLabel.call(this);
     _createScoreText.call(this);
+    _createHighestScoreLabel.call(this);
+    _createHighestScoreText.call(this);
     _createLivesText.call(this);
     _createTrueBtn.call(this);
     _createFalseBtn.call(this);
+    _createReplayBtn.call(this);
+    _createHighScoresBtn.call(this);
 
     _setListeners.call(this);
   }
@@ -83,7 +96,8 @@ define(function(require, exports, module) {
     this.mainNode = this.add(centerModifier);
   }
 
-  var lives = 10;
+  var INITIAL_LIVES=10;
+  var lives = INITIAL_LIVES;
   var score = 0;
   var isCorrect = 0;
   var number1 = 11;
@@ -94,10 +108,10 @@ define(function(require, exports, module) {
   function _createLogic() {
     isCorrect = Math.floor(Math.random() * 2);
 
-    number1 = Math.floor((Math.random()*20) + 11);
-    number2 = Math.floor((Math.random()*20) + 11);
+    number1 = Math.floor((Math.random()*30) + 1);
+    number2 = Math.floor((Math.random()*30) + 1);
 
-    operator = Math.floor(Math.random()*4);
+    operator = getOperator(score);
 
     result = getResult(number1,number2,operator);
     operatorString = getOperatorString(operator);
@@ -117,9 +131,24 @@ define(function(require, exports, module) {
       result = pNumber1 / pNumber2;
     }
 
-    if (isCorrect==0) result+=10;
+    if (isCorrect==0) {
+      if (pOperator==3) result+=0.5;
+      else result+=10;
+    }
 
     return result;
+  }
+
+  function getOperator(pScore) {
+    if (pScore<25) {
+      return Math.floor(Math.random()*4);
+    }
+    else if (pScore<50) {
+      return Math.floor((Math.random()*3) + 1);
+    }
+    else {
+      return Math.floor((Math.random()*2) + 2);
+    }
   }
 
   function getOperatorString(pOperator) {
@@ -154,7 +183,6 @@ define(function(require, exports, module) {
       size: [bubbleSize,bubbleSize],
       properties: {
         fontFamily: 'Arial',
-        // left: '-75px',
         left: (-WINDOW_WIDTH/2-80)+'px',
         textAlign: 'center',
         backgroundColor: 'white',
@@ -228,7 +256,13 @@ define(function(require, exports, module) {
       }
     });
 
-    this.mainNode.add(surface);
+    var modifier = new Modifier({
+      opacity: function function_name (argument) {
+        return 1-endingTransitionable.get();
+      },
+    });
+
+    this.mainNode.add(modifier).add(surface);
   }
 
   function _createResult() {
@@ -237,7 +271,6 @@ define(function(require, exports, module) {
       size: [bubbleSize,bubbleSize],
       properties: {
         fontFamily: 'Arial',
-        // left: '80px',
         left: (WINDOW_WIDTH/2+80)+'px',
         textAlign: 'center',
         backgroundColor: 'white',
@@ -274,15 +307,41 @@ define(function(require, exports, module) {
     this.add(modifier).add(surface);
   }
 
+  function _createScoreLabel() {
+    scoreLbl = new Surface({
+      size: [undefined, true],
+      content: 'SCORE&nbsp;&nbsp;:',
+      properties: {
+        left: '-100px',
+        fontFamily: 'Consolas,monaco,monospace',
+        fontSize: 'bold',
+        fontSize: '42px',
+        top: '-30px',
+        color: 'white',
+      }
+    });
+
+    var modifier = new Modifier({
+      origin: [0, 0.5],
+      align : [0.5, 0.5],
+      transform: function() {
+        return Transform.scale(0.6,0.6,1);
+      },
+      opacity: function() {
+        return endingTransitionable.get();
+      }
+    });
+
+    this.add(modifier).add(scoreLbl);
+  }
+
   function _createScoreText() {
     scoreTxt = new Surface({
       size: [undefined, true],
       content: ''+score,
       properties: {
-        fontFamily: 'Arial',
+        fontFamily: 'Consolas,monaco,monospace',
         fontSize: 'bold',
-        paddingLeft: '5px',
-        // backgroundColor: 'white',
         fontSize: '42px',
         textAlign: 'center',
         top: '-120px',
@@ -293,9 +352,74 @@ define(function(require, exports, module) {
     var modifier = new Modifier({
       origin: [0.5, 0.5],
       align : [0.5, 0.5],
+      transform: function() {
+        return Transform.scale(1-0.4*endingTransitionable.get(),1-0.4*endingTransitionable.get(),1);
+      },
     });
 
-    this.add(modifier).add(scoreTxt);
+    scoreTranslateModifier = new Modifier({
+      transform: function() {
+        return Transform.translate(92*endingTransitionable.get(),150*endingTransitionable.get(),1);
+      },
+    })
+
+    this.add(modifier).add(scoreTranslateModifier).add(scoreTxt);
+  }
+
+  function _createHighestScoreLabel() {
+    highestLbl = new Surface({
+      size: [undefined, true],
+      content: 'HIGHEST:',
+      properties: {
+        left: '-100px',
+        fontFamily: 'Consolas,monaco,monospace',
+        fontSize: 'bold',
+        fontSize: '42px',
+        top: '5px',
+        color: 'white',
+      }
+    });
+
+    var modifier = new Modifier({
+      origin: [0, 0.5],
+      align : [0.5, 0.5],
+      transform: function() {
+        return Transform.scale(0.6,0.6,1);
+      },
+      opacity: function() {
+        return endingTransitionable.get();
+      },
+    });
+
+    this.add(modifier).add(highestLbl);
+  }
+
+  function _createHighestScoreText() {
+    highestTxt = new Surface({
+      size: [undefined, true],
+      properties: {
+        left: '55px',
+        fontFamily: 'Consolas,monaco,monospace',
+        fontSize: 'bold',
+        fontSize: '42px',
+        textAlign: 'center',
+        top: '5px',
+        color: 'white',
+      }
+    });
+
+    var modifier = new Modifier({
+      origin: [0.5, 0.5],
+      align : [0.5, 0.5],
+      transform: function() {
+        return Transform.scale(0.6,0.6,1);
+      },
+      opacity: function() {
+        return endingTransitionable.get();
+      },
+    });
+
+    this.add(modifier).add(highestTxt);
   }
 
   function _createLivesText() {
@@ -361,6 +485,9 @@ define(function(require, exports, module) {
     var modifier = new Modifier({
       origin: [0.5, 0.5],
       align : [0.5, 0.5],
+      transform: function() {
+        return Transform.scale(1-endingTransitionable.get(),1-endingTransitionable.get(),1-endingTransitionable.get());
+      }
     });
 
     var textModifier = new Modifier({
@@ -444,6 +571,9 @@ define(function(require, exports, module) {
     var modifier = new Modifier({
       origin: [0.5, 0.5],
       align : [0.5, 0.5],
+      transform: function() {
+        return Transform.scale(1-endingTransitionable.get(),1-endingTransitionable.get(),1-endingTransitionable.get());
+      }
     });
 
     var textModifier = new Modifier({
@@ -478,6 +608,63 @@ define(function(require, exports, module) {
     theNode.add(textModifier).add(trueTxt);
   }
 
+  function _createReplayBtn() {
+    replayBtn = new Surface({
+      size: [100,55],
+      content: 'replay',
+      properties: {
+        left: '-55px',
+        top: '70px',
+        fontFamily: 'Arial',
+        fontSize: '21px',
+        backgroundColor: 'white',
+        borderRadius: '100px',
+        lineHeight: '55px',
+        textAlign: 'center',
+        cursor: 'pointer',
+      },
+    });
+
+    var modifier = new Modifier({
+      origin: [0.5, 0.5],
+      align: [0.5, 0.5],
+      transform: function() {
+        return Transform.translate(-WINDOW_WIDTH/2*(1-endingTransitionable.get()),WINDOW_WIDTH/2*(1-endingTransitionable.get()),1);
+      }
+    });
+
+    this.add(modifier).add(replayBtn);
+  }
+
+  function _createHighScoresBtn() {
+    highScoresBtn = new Surface({
+      size: [100,55],
+      content: 'high<br />scores',
+      properties: {
+        left: '55px',
+        top: '70px',
+        fontFamily: 'Arial',
+        fontSize: '21px',
+        backgroundColor: 'white',
+        borderRadius: '100px',
+        lineHeight: '20px',
+        textAlign: 'center',
+        paddingTop: '6px',
+        cursor: 'pointer',
+      }
+    });
+
+    var modifier = new Modifier({
+      origin: [0.5, 0.5],
+      align: [0.5, 0.5],
+      transform: function() {
+        return Transform.translate(WINDOW_WIDTH/2*(1-endingTransitionable.get()),WINDOW_WIDTH/2*(1-endingTransitionable.get()),1);
+      }
+    });
+
+    this.add(modifier).add(highScoresBtn);
+  }
+
   function _setListeners() {
     this.on('startGame', _newQuestion);
 
@@ -486,6 +673,7 @@ define(function(require, exports, module) {
         if (isCorrect==0) {
           falseCorrectTransitionable.set(1.0);
           score++;
+          if (score%10==0) lives+=3;
         }
         else {
           falseWrongTransitionable.set(1.0);
@@ -500,6 +688,7 @@ define(function(require, exports, module) {
         if (isCorrect==1) {
           trueCorrectTransitionable.set(1.0);
           score++;
+          if (score%10==0) lives+=3;
         }
         else {
           trueWrongTransitionable.set(1.0);
@@ -507,6 +696,10 @@ define(function(require, exports, module) {
         }
         _dismissQuestion();
       }
+    });
+
+    replayBtn.on('click', function() {
+      _replay();
     });
   }
 
@@ -604,8 +797,38 @@ define(function(require, exports, module) {
     Timer.setTimeout(function() {
       if (lives>0) {
         _newQuestion();
-      };
+      }
+      else {
+        _gameEnds();
+      }
     }.bind(this), translateAnimationDuration);
+  }
+
+  function _gameEnds() {
+    var prevHighScore = window.localStorage.getItem("score");
+    if (score>prevHighScore) {
+      window.localStorage.setItem("score",score);
+    }
+    highestTxt.setContent(''+window.localStorage.getItem("score"));
+
+    Timer.setTimeout(function() {
+      endingTransitionable.set(1.0, {
+        duration: endingAnimationDuration,
+      });
+    }.bind(this), translateAnimationDuration);
+  }
+
+  function _replay() {
+    score=0;
+    lives=INITIAL_LIVES;
+    scoreTxt.setContent(score);
+    livesTxt.setContent('Lives: '+lives);
+    endingTransitionable.set(0.0, {
+      duration: endingAnimationDuration,
+    });
+    Timer.setTimeout(function() {
+      _newQuestion();
+    }.bind(this), endingAnimationDuration);
   }
 
   module.exports = GameView;
