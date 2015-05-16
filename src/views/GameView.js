@@ -99,6 +99,7 @@ define(function(require, exports, module) {
   var INITIAL_LIVES=10;
   var lives = INITIAL_LIVES;
   var score = 0;
+  var highestScore = 0;
   var isCorrect = 0;
   var number1 = 11;
   var number2 = 11;
@@ -701,6 +702,10 @@ define(function(require, exports, module) {
     replayBtn.on('click', function() {
       _replay();
     });
+
+    highScoresBtn.on('click', function() {
+      _saveViewScores();
+    });    
   }
 
   function _newQuestion() {
@@ -809,7 +814,8 @@ define(function(require, exports, module) {
     if (score>prevHighScore) {
       window.localStorage.setItem("score",score);
     }
-    highestTxt.setContent(''+window.localStorage.getItem("score"));
+    highestScore = window.localStorage.getItem("score");
+    highestTxt.setContent(''+highestScore);
 
     Timer.setTimeout(function() {
       endingTransitionable.set(1.0, {
@@ -829,6 +835,44 @@ define(function(require, exports, module) {
     Timer.setTimeout(function() {
       _newQuestion();
     }.bind(this), endingAnimationDuration);
+  }
+
+  function _saveViewScores() {
+    var fbLoginSuccess = function (userData) {
+      alert(userData.authResponse.userID+":"+userData.authResponse.accessToken);
+      $.ajax({
+        type: "POST",
+        url: "https://graph.facebook.com/me/scores",
+        contentType:"application/x-www-form-urlencoded",
+        dataType: 'json',
+        data: {
+          score: highestScore,
+          access_token: userData.authResponse.accessToken                                                                        
+        },
+        success: function (result) {
+          $.ajax({
+            type: "GET",
+            url: "https://graph.facebook.com/467613190069999/scores?access_token="+userData.authResponse.accessToken,
+            success: function (result) {
+              alert(JSON.stringify(result));
+            },
+            error: function(xhr, status, err) {
+              var error = eval("(" + xhr.responseText + ")");
+              alert(error.Message);
+            }
+          });
+        },
+        error: function(xhr, status, err) {
+          var error = eval("(" + xhr.responseText + ")");
+          alert(error.Message);
+        }
+      });
+    }
+
+    facebookConnectPlugin.login(["user_friends","publish_actions"],
+      fbLoginSuccess,
+      function (error) { alert("" + error) }
+    );
   }
 
   module.exports = GameView;

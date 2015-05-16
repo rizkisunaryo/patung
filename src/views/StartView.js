@@ -9,6 +9,8 @@ define(function(require, exports, module) {
   var WINDOW_WIDTH = window.innerWidth;
   var WINDOW_HEIGHT = window.innerHeight;
 
+  var debugBox;
+
   function StartView() {
     View.apply(this, arguments);
 
